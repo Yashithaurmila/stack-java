@@ -22,7 +22,8 @@ public class HistoryController {
 	
 	@Autowired
 	 HistoryRepository historyRepository;
-	
+	@Autowired
+	EngineerRepository engineerRepository;
 	@Autowired
 	InstanceRepository instanceRepository;
 
@@ -40,8 +41,28 @@ public class HistoryController {
 	    }
 	  } 
      */
+
+	@PostMapping("/instances/{id}/assign")
+	public ResponseEntity<History> addEngineer(@PathVariable("id") long id,
+											   @RequestBody History instance) {
+		try {
+			Optional<Engineer> engineerOptional = engineerRepository.findByEngineerId(instance.getEngineerId());
+			if(!engineerOptional.isPresent())
+				return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+			instance.setTime();
+            instance.setInstanceId(id);
+			Optional<Instance> option = instanceRepository.findById(instance.getInstanceId());
+			if(option.get().getStatus().equals("InUse"))
+				return new ResponseEntity<>(null, HttpStatus.DESTINATION_LOCKED);
+			option.get().setStatus("InUse");
+			History _instance = historyRepository.save(instance);
+			return new ResponseEntity<>(_instance, HttpStatus.CREATED);
+		} catch (Exception e) {
+			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 	
-	  @PostMapping("/history")
+/*	  @PostMapping("/history")
 	  public ResponseEntity<History> addEngineer(@RequestBody History instance) {
 	    try {
 	    	 instance.setTime();
@@ -55,7 +76,24 @@ public class HistoryController {
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
-	  }
+	  } */
+
+
+
+
+	@GetMapping("/profile/{engineerId}")
+	public ResponseEntity<List<History>> getAllByEngineerId(@PathVariable("engineerId") long engineerId) {
+		List<History> histories = new ArrayList<>();
+		historyRepository.findAllByEngineerIdOrderByLifeTimeDesc(engineerId).forEach(histories::add);
+
+		if(histories.isEmpty())
+			return new ResponseEntity<>(null, HttpStatus.NO_CONTENT);
+		return new ResponseEntity<>(histories, HttpStatus.OK);
+
+	}
+
+
+
 	  
 	  @GetMapping("/history/{id}")
 	  public ResponseEntity<List<History>> getInstanceById(@PathVariable("id") long id) {
@@ -72,19 +110,27 @@ public class HistoryController {
 	      return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 	    }
 	  }
+
+
 	  
 	  @DeleteMapping("/history/{id}")
-	  public ResponseEntity<HttpStatus> deleteHistoryInstance(@PathVariable("id") long id) {
+	  public ResponseEntity<History> deleteHistoryInstance(@PathVariable("id") long id) {
 	    try {
 	    
 	    	Optional<History> historyOption = historyRepository.findById(id);
+
 	    	History history = historyOption.get();
 	    	Long instanceId = history.getInstanceId();
 	    	Optional<Instance> instanceOption = instanceRepository.findById(instanceId);
 	    	Instance instance = instanceOption.get();
 	    	instance.setStatus("Free");
+	    	history.setStopTime();
+	    	history.setLifeTime();
+	    	historyRepository.deleteById(id);
+	    	historyRepository.save(history);
+           System.out.println(history.getStopTime());
 	    	
-	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	      return new ResponseEntity<>(history, HttpStatus.OK);
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }

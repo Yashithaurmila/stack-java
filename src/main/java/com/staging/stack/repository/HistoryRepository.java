@@ -5,6 +5,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import java.util.*;
+
+import java.util.Optional;
 
 public interface HistoryRepository extends JpaRepository<History, Long>{
 	
@@ -15,7 +18,10 @@ public interface HistoryRepository extends JpaRepository<History, Long>{
 	  
 	  @Query(value = "SELECT h1 FROM History h1  WHERE h1.instanceId= ?1 order by h1.instanceId desc")
 	  Page<History>findByInstanceIdOrderBytimeDesc(long i, Pageable pageable);
-	  
+
+	  List<History> findAllByInstanceId(long instanceId);
+	  Optional<History> findByInstanceId(long instanceId);
+	  List<History> findAllByEngineerIdOrderByLifeTimeDesc(long engineerId);
 	  
 
 }
