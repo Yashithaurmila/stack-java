@@ -41,13 +41,32 @@ public class InstanceControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders
                 .get("/instances")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[1].name", is("Inst2")))
-                .andExpext(jsonPath("$[0].status", is("Free")))
-
+                .andExpect(jsonPath("$[0].status", is("Free"))
         );
+    }
+
+    @Test
+    public void getInstanceById_success() throws Exception{
+
+        Mockito.when(instanceRepository.findById(inst_2.getId())).thenReturn(Optional.of(inst_2));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .get("/instances/2")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("Inst2")));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .get("instances/4")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(404));
+
+
+
     }
 
 
