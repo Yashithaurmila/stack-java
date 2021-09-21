@@ -47,6 +47,7 @@
 			<exclusion>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
+
 			</exclusion>
 		</exclusions>
 		</dependency>
@@ -80,7 +81,7 @@
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<version>5.5.1</version>
-			<scope>test</scope>
+
 		</dependency>
 	</dependencies>
 
