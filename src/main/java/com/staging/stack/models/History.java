@@ -47,7 +47,7 @@ public class History {
 	    Date d1 = stringToDate(s1);
 	    Date d2 = stringToDate(s2);
 	    long diff = d2.getTime() - d1.getTime();
-	    return diff;
+	    return (diff/(100*60));
 	}
 
 	public History() {
