@@ -45,7 +45,7 @@ public class InstanceControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[1].name", is("Inst2")))
-              
+                .andExpext(jsonPath("$[0].status", is("Free")))
 
         );
     }
