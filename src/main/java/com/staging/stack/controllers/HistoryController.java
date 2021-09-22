@@ -44,18 +44,18 @@ public class HistoryController {
 
 	@PostMapping("/instances/{id}/assign")
 	public ResponseEntity<History> addEngineer(@PathVariable("id") long id,
-											   @RequestBody History instance) {
+											   @RequestBody History history) {
 		try {
-			Optional<Engineer> engineerOptional = engineerRepository.findByEngineerId(instance.getEngineerId());
+			Optional<Engineer> engineerOptional = engineerRepository.findByEngineerId(history.getEngineerId());
 			if(!engineerOptional.isPresent())
 				return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-			instance.setTime();
-            instance.setInstanceId(id);
-			Optional<Instance> option = instanceRepository.findById(instance.getInstanceId());
+			history.setTime();
+            history.setInstanceId(id);
+			Optional<Instance> option = instanceRepository.findById(history.getInstanceId());
 			if(option.get().getStatus().equals("InUse"))
 				return new ResponseEntity<>(null, HttpStatus.DESTINATION_LOCKED);
 			option.get().setStatus("InUse");
-			History _instance = historyRepository.save(instance);
+			History _instance = historyRepository.save(history);
 			return new ResponseEntity<>(_instance, HttpStatus.CREATED);
 		} catch (Exception e) {
 			return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);

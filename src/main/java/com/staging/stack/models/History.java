@@ -55,7 +55,7 @@ public class History {
 		// TODO Auto-generated constructor stub
 	}
 
-	public History (long id, long engineerId, String engineerName, String description, String time, Long instanceId) throws Exception {
+	public History (long id, long engineerId, String engineerName, String description, Long instanceId) throws Exception {
 		super();
 		this.id = id;
 		this.engineerId = engineerId;

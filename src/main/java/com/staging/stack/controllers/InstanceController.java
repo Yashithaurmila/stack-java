@@ -8,9 +8,12 @@ import com.staging.stack.repository.HistoryRepository;
 import com.staging.stack.repository.InstanceRepository;
 import com.staging.stack.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.ImageBanner;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -20,7 +23,7 @@ import java.util.Optional;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/test")
-
+@TestConfiguration
 public class InstanceController {
 
 	@Autowired
@@ -32,7 +35,7 @@ public class InstanceController {
 	UserRepository userRepository;
 
 
-	@GetMapping("/instances")
+	@RequestMapping(value = "/instances", method = RequestMethod.GET)
 	  public ResponseEntity<List<Instance>> getAllInstances(@RequestParam(required = false) String name) {
 	    try {
 	      List<Instance> instances = new ArrayList<Instance>();
@@ -56,7 +59,7 @@ public class InstanceController {
 	    }
 	  }
 
-	  @GetMapping("/instances/{id}")
+	  @GetMapping(value = "/instances/{id}")
 	  public ResponseEntity<Instance> getInstanceById(@PathVariable("id") long id) {
 	    Optional<Instance> instanceData = instanceRepository.findById(id);
 
@@ -102,7 +105,7 @@ public class InstanceController {
 
 	  @PutMapping("/instances/{id}")
 	  @Secured("ROLE_USER")
-	  public ResponseEntity<Instance> updateTutorial(@PathVariable("id") long id, @RequestBody Instance instance) throws Exception{
+	  public ResponseEntity<Instance> updateInstance(@PathVariable("id") long id, @RequestBody Instance instance) throws Exception{
 	    Optional<Instance> instanceData = instanceRepository.findById(id);
 
 	    if (instanceData.isPresent()) {
@@ -134,8 +137,11 @@ public class InstanceController {
 	  @DeleteMapping("/instances/{id}")
 	  public ResponseEntity<HttpStatus> deleteInstance(@PathVariable("id") long id) {
 	    try {
+	    	Optional<Instance> instance = instanceRepository.findById(id);
+	    	if(!instance.isPresent())
+	    		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	      instanceRepository.deleteById(id);
-	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	      return new ResponseEntity<>(HttpStatus.OK);
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
@@ -145,7 +151,7 @@ public class InstanceController {
 	  public ResponseEntity<HttpStatus> deleteAllInstances() {
 	    try {
 	      instanceRepository.deleteAll();
-	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	      return new ResponseEntity<>(HttpStatus.OK);
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
