@@ -43,7 +43,7 @@ public class EngineerController {
 
 
             if(engineers.isEmpty())
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
             return new ResponseEntity<>(engineers, HttpStatus.OK);
         }catch (Exception E){
@@ -76,7 +76,7 @@ public class EngineerController {
         try{
             Optional<User> _user = userRepository.findById(engineer.getengineerId());
             if(!_user.isPresent())
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
              Engineer _engineer = engineerRepository.save(new Engineer(
                      engineer.getId(), engineer.getengineerId(), engineer.getEngineerName()
              ));
@@ -108,8 +108,11 @@ public class EngineerController {
     @DeleteMapping("/engineers/{engineerId}")
     public ResponseEntity<HttpStatus> deleteEngineer(@PathVariable("engineerId") long engineerId) {
         try {
+            Optional<Engineer> optional = engineerRepository.findByEngineerId(engineerId);
+            if(!optional.isPresent())
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
              engineerRepository.deleteByEngineerId(engineerId);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -119,7 +122,7 @@ public class EngineerController {
     public ResponseEntity<HttpStatus> deleteAllEngineers() {
         try {
             engineerRepository.deleteAll();
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }

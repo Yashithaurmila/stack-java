@@ -139,7 +139,7 @@ public class HistoryController {
 	  
 	  
 	  @GetMapping("/history")
-	  public ResponseEntity<Map<String, Object>> getAllTutorialsPage(
+	  public ResponseEntity<Map<String, Object>> getAllHistoryPage(
 		  @RequestParam(required = false) Long instanceId,
 	      @RequestParam(required = false) String time,
 	      @RequestParam(defaultValue = "0") int page,
@@ -182,7 +182,7 @@ public class HistoryController {
 	  public ResponseEntity<HttpStatus> deleteAllInstances() {
 	    try {
 	      historyRepository.deleteAll();
-	      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	      return new ResponseEntity<>(HttpStatus.OK);
 	    } catch (Exception e) {
 	      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }

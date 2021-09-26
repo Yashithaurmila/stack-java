@@ -1,6 +1,7 @@
 package com.staging.stack.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.staging.stack.models.Engineer;
 import com.staging.stack.repository.EngineerRepository;
 import org.junit.jupiter.api.Test;
 
@@ -29,6 +30,7 @@ import com.staging.stack.repository.InstanceRepository;
 import org.mockito.Mockito;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 
+import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.*;
@@ -43,6 +45,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -78,6 +81,8 @@ class HistoryControllerTest {
     History h1 = new History(1, 1, "Eng1", "I am using", 2L);
     History h2 = new History(2, 1, "Eng1", "I am using", 2L);
     History h3 = new History(3, 2, "Eng2", "I am using", 3L);
+
+
     HistoryControllerTest() throws Exception {
     }
 
@@ -91,15 +96,72 @@ class HistoryControllerTest {
     }
 
     @Test
-    void addEngineer() {
-        assertNotNull(historyRepository);
+    void addEngineer_success() throws Exception{
+
+        History history = new History(1, 1, "Eng1", "I am using", 1L);
+        Instance ins1 = new Instance(1, "Inst1", 123, "Free");
+        Engineer e1 = new Engineer(1, 1,  "Eng1");
+        Mockito.when(engineerRepository.findByEngineerId(history.getEngineerId())).thenReturn(Optional.of(e1));
+        Mockito.when(instanceRepository.findById(history.getInstanceId())).thenReturn(Optional.of(ins1));
+        Mockito.when(historyRepository.save(history)).thenReturn(history);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/api/test/instances/{id}/assign", 1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(this.objectMapper.writeValueAsString(h1));
+
+        mockMvc.perform(mockRequest).andDo(print())
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void addEngineer_Failure() throws Exception{
+
+        History history = new History(1, 1, "Eng1", "I am using", 1L);
+        Instance ins1 = new Instance(1, "Inst1", 123, "InUse");
+        Engineer e1 = new Engineer(1, 1,  "Eng1");
+        Engineer e2 = new Engineer(2, 2,  "Eng2");
+        Mockito.when(engineerRepository.findByEngineerId(history.getEngineerId())).thenReturn(Optional.of(e1));
+        Mockito.when(instanceRepository.findById(history.getInstanceId())).thenReturn(Optional.of(ins1));
+        Mockito.when(historyRepository.save(history)).thenReturn(history);
+
+        MockHttpServletRequestBuilder mockRequest = MockMvcRequestBuilders.post("/api/test/instances/{id}/assign", 1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(this.objectMapper.writeValueAsString(h1));
+
+        //InUse State
+        mockMvc.perform(mockRequest).andDo(print())
+                .andExpect(status().isDestinationLocked());
+
+
+    }
+
+    @Test
+    void addEngineer_EngineerNotAuthorized() throws Exception{
+
+        History history = new History(1, 1, "Eng1", "I am using", 1L);
+        Instance ins1 = new Instance(1, "Inst1", 123, "InUse");
+        //Engineer is not Authorized
+
+        Mockito.when(instanceRepository.findById(history.getInstanceId())).thenReturn(Optional.of(ins1));
+        Mockito.when(historyRepository.save(history)).thenReturn(history);
+        MockHttpServletRequestBuilder mockRequest1 = MockMvcRequestBuilders.post("/api/test/instances/{id}/assign", 1)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(this.objectMapper.writeValueAsString(h1));
+        mockMvc.perform(mockRequest1).andExpect(status().isInternalServerError());
+
     }
 
     @Test
     void getAllByEngineerId_success() throws Exception{
 
       List<History> histories = new ArrayList<>(Arrays.asList(h1, h2));
-      List<History> _h = new ArrayList<>();
+
       Mockito.when(historyRepository.findAllByEngineerIdOrderByLifeTimeDesc(h1.getEngineerId())).thenReturn(histories);
 
       mockMvc.perform(MockMvcRequestBuilders
@@ -150,14 +212,63 @@ class HistoryControllerTest {
 
     }
     @Test
-    void deleteHistoryInstance() {
+    void deleteHistoryInstance_Success() throws Exception{
+
+        Instance ins1 = new Instance(1, "Inst1", 123, "InUse");
+
+        Mockito.when(historyRepository.findById(h1.getId())).thenReturn(Optional.of(h1));
+        Mockito.when(instanceRepository.findById(h1.getInstanceId())).thenReturn(Optional.of(ins1));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .delete("/api/test/history/{id}", 1)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void getAllTutorialsPage() {
+    void deleteHistoryInstance_Failure() throws Exception{
+
+        Instance ins1 = new Instance(1, "Inst1", 123, "InUse");
+
+        Mockito.when(historyRepository.findById(h1.getId())).thenReturn(Optional.of(h1));
+        Mockito.when(instanceRepository.findById(h1.getInstanceId())).thenReturn(Optional.of(ins1));
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .delete("/api/test/history/{id}", 2)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
-    void deleteAllInstances() {
+    void deleteAllInstances_success() throws  Exception{
+        List<History> histories = new ArrayList<>(Arrays.asList(h1, h2));
+
+        Mockito.when(historyRepository.findAll()).thenReturn(histories);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .delete("/api/test/history")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+    }
+    @Test
+   void getAllHistoryPage_success() throws Exception
+    {
+
+        List<History> histories = new ArrayList<>(Arrays.asList(h1, h2));
+
+        Page<History> historyPage = new PageImpl<>(histories);
+
+
+
+  Mockito.when(historyRepository.findAll(org.mockito.Matchers.isA(Pageable.class))).thenReturn(historyPage);
+
+
+        mockMvc.perform(MockMvcRequestBuilders
+                .get("/api/test/history")
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.totalItems").value(2));
     }
 }

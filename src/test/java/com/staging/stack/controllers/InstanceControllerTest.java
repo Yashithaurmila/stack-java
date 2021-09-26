@@ -159,7 +159,8 @@ class InstanceControllerTest {
                 .content(this.mapper.writeValueAsString(instance));
 
         mockMvc.perform(mockRequest)
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andDo(print());
 
 
         //failure case
@@ -174,7 +175,7 @@ class InstanceControllerTest {
     }
 
     @Test
-    void updateInstanceTest() throws Exception {
+    void updateInstanceTest_success() throws Exception {
 
 
         Instance instance = new Instance(3, "Inst3", 123, "Free");
